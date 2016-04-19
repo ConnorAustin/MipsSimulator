@@ -1,0 +1,37 @@
+# R
+sub $v0, $k0, $s6
+and $k0, $t5, $v1
+or $ra, $t9, $at
+loop: nor $ra, $t2, $at
+slt $s5, $s5, $s2
+
+
+# Shifts
+sll $t8, $t4, 5
+srl $t0, $t1, 2
+
+
+# Jr
+jr $at
+
+# I
+addi $at, $t4, -2
+andi $fp, $t3, 0xFFFF
+ori $sp, $s2, 62
+
+# Branches
+roger:
+beq $gp, $s1, loop
+bne $ra, $s0, done
+
+# lwsw 
+lw $k1, 20($fp)
+mayday:
+sw $a3, -20($fp)
+done: 
+
+# J
+j mayday
+
+# Jal
+jal roger

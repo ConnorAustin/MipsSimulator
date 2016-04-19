@@ -1,0 +1,2 @@
+#!/bin/bash
+clang++ -O1 -std=c++11 *.cpp -lsfml-graphics -lsfml-window -lsfml-system && ./a.out
