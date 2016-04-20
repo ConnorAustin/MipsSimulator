@@ -4,8 +4,8 @@
 
 void Unit::init(std::string title, int w, int h) {
     this->title = title;
-    this->x = 20;
-    this->y = 20;
+    this->x = 40;
+    this->y = 200;
     this->w = w;
     this->h = h;
 }

@@ -12,14 +12,24 @@ constexpr size_t width  = 1500;
 constexpr size_t height = 900;
 constexpr size_t cycle_delay = 1000;
 constexpr float title_height = 18;
+constexpr float gui_height = 40;
 constexpr float io_size = 5.0f;
 
 sf::RenderWindow window;
 sf::Font font;
+sf::Texture nextTexture;
+sf::Texture autoPlayTexture;
+sf::Texture pauseTexture;
 sf::Text controlStateText;
+sf::Sprite nextSprite;
+sf::Sprite autoPlaySprite;
+sf::Sprite pauseSprite;
+sf::RectangleShape guiPanel(sf::Vector2f(width, gui_height));
 
 sf::Vector2i drag_offset;
 Unit* drag = nullptr;
+bool autoplay = false;
+bool paused = true;
 
 void draw_connection(sf::RenderWindow& window, sf::Color& col, int x1, int y1, int x2, int y2) {
     if(x1 < x2) {
@@ -138,16 +148,47 @@ Application::Application(Simulator* sim) {
     set_fetch_state();
     
     font.loadFromFile("AndaleMono.ttf");
-    controlStateText.setPosition(2, 2);
-    controlStateText.setColor(black);
+    
+    // Init the control state text
+    controlStateText.setColor(white);
     controlStateText.setFont(font);
     controlStateText.setCharacterSize(12);
+    controlStateText.setPosition(2, 13);
+    
+    // Init the gui panel
+    guiPanel.setPosition(0, 0);
+    guiPanel.setFillColor(black);
+    
+    // Init the next button
+    nextTexture.loadFromFile("next.png");
+    nextSprite.setTexture(nextTexture);
+    nextSprite.setScale(0.1f, 0.1f);
+    nextSprite.setColor(white);
+    auto nextSpriteSize = nextSprite.getGlobalBounds();
+    nextSprite.setPosition(180, gui_height / 2 - nextSpriteSize.height / 2);
+    
+    // Init the auto play button
+    autoPlayTexture.loadFromFile("autoplay.png");
+    autoPlaySprite.setTexture(autoPlayTexture);
+    autoPlaySprite.setScale(0.1f, 0.1f);
+    autoPlaySprite.setColor(white);
+    auto autoPlaySize = autoPlaySprite.getGlobalBounds();
+    autoPlaySprite.setPosition(220, gui_height / 2 - autoPlaySize.height / 2);
+    
+    // Init the pause button
+    pauseTexture.loadFromFile("pause.png");
+    pauseSprite.setTexture(pauseTexture);
+    pauseSprite.setScale(0.1f, 0.1f);
+    pauseSprite.setColor(white);
+    auto pauseSize = pauseSprite.getGlobalBounds();
+    pauseSprite.setPosition(280, gui_height / 2 - pauseSize.height / 2);
     
     window.create(sf::VideoMode(width, height), "MIPS my ride");
     window.setFramerateLimit(60);
     
     sf::Clock clk;
     auto prev_cycle_time = clk.getElapsedTime();
+    bool mouse_held = false;
     while (window.isOpen()) {
         // Check close event
         sf::Event event;
@@ -160,6 +201,27 @@ Application::Application(Simulator* sim) {
         // Dragging
         if(sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
             auto mp = sf::Mouse::getPosition(window);
+            
+            auto nextBox = nextSprite.getGlobalBounds();
+            if(nextBox.contains(mp.x, mp.y)) {
+                autoplay = false;
+                paused = false;
+                simulator->cycle();
+            }
+            
+            auto autoPlayBox = autoPlaySprite.getGlobalBounds();
+            if(autoPlayBox.contains(mp.x, mp.y)) {
+                autoplay = true;
+                paused = false;
+                prev_cycle_time = clk.getElapsedTime();
+            }
+            
+            auto pauseBox = pauseSprite.getGlobalBounds();
+            if(pauseBox.contains(mp.x, mp.y)) {
+                paused = true;
+                autoplay = false;
+            }
+            
             if(drag == nullptr) {
                 for(Unit* unit : simulator->circuit) {
                     if(mp.x >= unit->x && mp.x <= unit->x + unit->w && 
@@ -177,6 +239,7 @@ Application::Application(Simulator* sim) {
             }
         } else {
             drag = nullptr;
+            mouse_held = false;
         }
         
         // Saving
@@ -203,12 +266,20 @@ Application::Application(Simulator* sim) {
         }
         
         controlStateText.setString(control.name);
+        window.draw(guiPanel);
+        window.draw(nextSprite);
         window.draw(controlStateText);
+        
+        autoPlaySprite.setColor(autoplay ? sf::Color(180, 180, 180) : white);
+        window.draw(autoPlaySprite);
+        
+        pauseSprite.setColor(paused ? sf::Color(180, 180, 180) : white);
+        window.draw(pauseSprite);
         
         window.display();
         
         auto cur_time = clk.getElapsedTime();
-        if((cur_time - prev_cycle_time).asMilliseconds() > cycle_delay) {
+        if(autoplay && (cur_time - prev_cycle_time).asMilliseconds() > cycle_delay) {
             prev_cycle_time = cur_time;
 
             simulator->cycle();
