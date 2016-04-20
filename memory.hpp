@@ -16,7 +16,6 @@ public:
         add_output(); // Output Data
     }
     
-private:
     std::map<u32, u32> addr_to_mem;
     
     void on_input(int in, u32 val) override { 
@@ -31,7 +30,7 @@ private:
         }
     }
     
-    void load_instructions(u32 base_address, std::vector<u32> instructions) {
+    void load_instructions(std::vector<u32> instructions, u32 base_address) {
         for(int i = 0; i < instructions.size(); ++i) {
             addr_to_mem[base_address + i * 4] = instructions[i];
         }

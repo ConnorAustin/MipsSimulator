@@ -1,9 +1,9 @@
 #include "unit.hpp"
 
 class Constant : public Unit { 
-private:
-    u32 val;
 public:
+    u32 val;
+
     Constant(u32 val) {
         this->val = val;
         init("", 15, 15);
@@ -21,7 +21,7 @@ public:
         window.draw(text);
     }
     
-    void cycle_start() override {
+    void cycle() override {
         write(0, val);
     }
 };

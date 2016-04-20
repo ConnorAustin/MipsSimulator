@@ -15,6 +15,8 @@ enum class ALUOP {
 };
 
 struct Control {
+    std::string name;
+    
     u32 PCWriteCond;
     u32 PCWrite; // This is after the OR in the diagram
     u32 PCSource;
@@ -29,6 +31,8 @@ struct Control {
     u32 RegDataLoc; // Was MemToReg
     u32 IRWrite;
 };
+
+void next_control_state(u32 instruction);
 
 void set_fetch_state();
 

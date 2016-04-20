@@ -2,10 +2,10 @@
 #include "unit.hpp"
 
 class Peeler : public Unit {
-private:
+public:
     int a, b;
     int shift, mask;
-public:
+
     Peeler(int a, int b) {
         this->a = a;
         this->b = b;

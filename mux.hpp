@@ -7,10 +7,9 @@
 #include "unit.hpp"
 
 class Mux : public Unit {
-private:
-    u32* selector;
-    
 public:
+    u32* selector;
+
     Mux(int input_size, u32* sel) {
         init("", 20, 20 * input_size);
         

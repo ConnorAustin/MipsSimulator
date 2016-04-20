@@ -17,6 +17,8 @@ public:
         add_output(); // Output A
         add_output(); // Output B
         
+        write_data = 0;
+        write_reg = 0;
         memset(registers, 0, sizeof(u32) * 32); 
     }
     
@@ -34,7 +36,7 @@ public:
         }
     }
     
-    void cycle_start() override { 
+    void cycle() override { 
         registers[write_reg] = write_data;
     }
 };

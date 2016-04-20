@@ -2,10 +2,9 @@
 #include "unit.hpp"
 
 class Shifter : public Unit {
-private:
+public:
     int shamt;
     
-public:
     Shifter(int shamt) {
         this->shamt = shamt;
         

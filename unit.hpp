@@ -40,7 +40,7 @@ public:
     void reset_inputs();
     
     virtual void inputs_ready() {}
-    virtual void cycle_start() { }
+    virtual void cycle() { }
     virtual void draw(sf::RenderWindow& window, sf::Font& font) { }
     virtual void on_input(int in, u32 val) { }
 };

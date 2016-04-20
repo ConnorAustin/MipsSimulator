@@ -6,9 +6,9 @@
 #include "unit.hpp"
 
 class Register : public Unit {
-    sf::Text reg_text;
-    
 public:
+    sf::Text reg_text;
+
     u32 cur_val;
     u32 next_val;
     Register(std::string title) {
@@ -37,7 +37,7 @@ public:
         next_val = val;
     }
     
-    void cycle_start() override { 
+    void cycle() override { 
         cur_val = next_val;
         write(0, cur_val);
     }

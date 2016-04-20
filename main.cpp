@@ -1,8 +1,7 @@
-// Usage: assembler <options> <input_file>
+// Usage: simulator <options> <input_file>
 //   By default it takes input from stdin and prints to stdout and the base address is 0
 //   --help        Prints this
-//   -a <number>   Sets the base address in hex or decimal as <number>
-//   -o <file>     Outputs the assembled result into <file>
+//   -a <number>   Sets the base address in hex or decimal to <number>
 
 #include <exception>
 #include <iostream>
@@ -14,22 +13,23 @@
 #include "util.hpp"
 #include "args.hpp"
 #include "application.hpp"
+#include "simulator.hpp"
 
 // Prints the program's help
 void print_help() {
-    std::cout << "Usage: assembler <options> <input_file>" << std::endl;
+    std::cout << "Usage: simulator <options> <input_file>" << std::endl;
     std::cout << "  By default it takes input from stdin and prints to stdout and the base address is 0" << std::endl;
     std::cout << "  --help        Prints this" << std::endl;
-    std::cout << "  -a <number>   Sets the base address in hex or decimal as <number>" << std::endl;
-    std::cout << "  -o <file>     Outputs the assembled result into <file>" << std::endl;
+    std::cout << "  -a <number>   Sets the base address in hex or decimal to <number>" << std::endl;
 }
 
 int main(int argc, char* argv[]) {    
     try {
-        //Config config = config_from_args(argc, argv);
+        Config config = config_from_args(argc, argv);
+        auto instructions = assemble(config.in, config.base_address);
         
-        //assemble(config.in, config.base_address);
-        run_application();
+        Simulator sim(instructions, config.base_address);
+        Application app(&sim);
     }
     
     // Handle any errors

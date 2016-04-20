@@ -3,15 +3,23 @@
 
 #include <cstdint>
 #include <vector>
-
+#include "control.hpp"
+#include "unit.hpp"
 #include "util.hpp"
 
-void load_instructions(std::vector<u32> instructions, u32 location) {
+class Simulator {
+private: 
+    Unit* add(Unit u);
     
-}
-
-void step_instruction(u32 instruction) {
-        
-}
+public:
+    std::vector<Unit*> circuit;
+    
+    Simulator(std::vector<u32> instructions, u32 base_address);
+    
+    void cycle();
+    
+    void load();
+    void save();
+};
 
 #endif
