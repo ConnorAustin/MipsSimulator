@@ -15,9 +15,14 @@ struct AsmException {
     AsmException(int line_number, std::string error_message) : line_number(line_number), error_message(error_message) { }
 };
 
+struct AsmResult {
+    std::vector<u32> instructions;
+    std::vector<std::string> code;
+};
+
 // Assembles the code given from in and outputs the result to out
 //      Throws AsmException
 //      Throws std::ios_base::failure
-std::vector<u32> assemble(std::istream* in, long base_address);
+AsmResult assemble(std::istream* in, long base_address);
 
 #endif

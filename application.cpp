@@ -4,16 +4,17 @@
 
 #include "application.hpp"
 #include "unit.hpp"
+#include "wire.hpp"
 
 // Constants
 const sf::Color white(230, 230, 230);
 const sf::Color black(20, 20, 20);
-constexpr size_t width  = 1500;
-constexpr size_t height = 900;
-constexpr size_t cycle_delay = 1000;
+constexpr size_t width  = 1400;
+constexpr size_t height = 850;
+constexpr size_t cycle_delay = 200;
 constexpr float title_height = 18;
 constexpr float gui_height = 40;
-constexpr float io_size = 5.0f;
+constexpr int io_size = 5;
 
 sf::RenderWindow window;
 sf::Font font;
@@ -21,69 +22,71 @@ sf::Texture nextTexture;
 sf::Texture autoPlayTexture;
 sf::Texture pauseTexture;
 sf::Text controlStateText;
+sf::Text codeText;
 sf::Sprite nextSprite;
 sf::Sprite autoPlaySprite;
 sf::Sprite pauseSprite;
 sf::RectangleShape guiPanel(sf::Vector2f(width, gui_height));
+sf::RectangleShape registerPanel(sf::Vector2f(360, 250));
+sf::RectangleShape memoryPanel(sf::Vector2f(220, 230));
 
 sf::Vector2i drag_offset;
 Unit* drag = nullptr;
 bool autoplay = false;
 bool paused = true;
+float pulse_interp = 0;
+float pulse_speed = 0.001f;
+u32 cur_address = 0;
 
 void draw_connection(sf::RenderWindow& window, sf::Color& col, int x1, int y1, int x2, int y2) {
+    sf::CircleShape pulse(2);
+    pulse.setFillColor(col);
+    Wire w;
+    
     if(x1 < x2) {
-        if(std::abs(y1 - y2) < 4) {
-            sf::Vertex line[] =
-            {
-                sf::Vertex(sf::Vector2f(x1, y1), col),
-                sf::Vertex(sf::Vector2f(x2, y2), col)
-            };
-            
-            window.draw(line, 2, sf::Lines);
-            return;
+        if(std::abs(y1 - y2) < 4) {    
+            w.add({{x1, y1}, {x2, y2}});
         }
-        
-        int half_x = (int)((x1 + io_size) + 0.5f * ((x2 - io_size) - (x1 + io_size)));
-        half_x -= half_x % 5;
-        sf::Vertex line[] =
-        {
-            sf::Vertex(sf::Vector2f(x1 + io_size, y1), col),
-            sf::Vertex(sf::Vector2f(half_x, y1), col),
+        else {
+            int half_x = (int)((x1 + io_size) + 0.5f * ((x2 - io_size) - (x1 + io_size)));
+            half_x -= half_x % 5;
             
-            sf::Vertex(sf::Vector2f(half_x, y1), col),
-            sf::Vertex(sf::Vector2f(half_x, y2), col),
-            
-            sf::Vertex(sf::Vector2f(half_x, y2), col),
-            sf::Vertex(sf::Vector2f(x2, y2), col)
-        };
-        window.draw(line, 6, sf::Lines);
+            w.add({
+                {x1 + io_size, y1},
+                {half_x, y1},
+                {half_x, y1},
+                {half_x, y2},
+                {half_x, y2},
+                {x2, y2}
+            });
+        }
     } else {
         const int jut = 5;
         int jut_out_x = x1 + io_size + jut;
         
         int jut_out_x2 = x2 - io_size - jut;
-        float main_y = std::min(y1, y2) - title_height - 50;
+        int main_y = std::min(y1, y2) - title_height - 50;
         
-        sf::Vertex line[] =
-        {
-            sf::Vertex(sf::Vector2f(x1, y1), col),
-            sf::Vertex(sf::Vector2f(jut_out_x, y1), col),
-            
-            sf::Vertex(sf::Vector2f(jut_out_x, y1), col),
-            sf::Vertex(sf::Vector2f(jut_out_x, main_y), col),
-            
-            sf::Vertex(sf::Vector2f(jut_out_x, main_y), col),
-            sf::Vertex(sf::Vector2f(jut_out_x2, main_y), col),
-            
-            sf::Vertex(sf::Vector2f(jut_out_x2, main_y), col),
-            sf::Vertex(sf::Vector2f(jut_out_x2, y2), col),
-            
-            sf::Vertex(sf::Vector2f(jut_out_x2, y2), col),
-            sf::Vertex(sf::Vector2f(x2, y2), col)
-        };
-        window.draw(line, 10, sf::Lines);
+        w.add({
+            {x1, y1},
+            {jut_out_x, y1},
+            {jut_out_x, y1},
+            {jut_out_x, main_y},
+            {jut_out_x, main_y},
+            {jut_out_x2, main_y},
+            {jut_out_x2, main_y},
+            {jut_out_x2, y2},
+            {jut_out_x2, y2},
+            {x2, y2}
+        });
+        w.draw(window, col);
     }
+    if(pulse_interp > 0) {
+        auto pos = w.interp(pulse_interp);
+        pulse.setPosition(pos.x - pulse.getRadius(), pos.y - pulse.getRadius());
+        window.draw(pulse);
+    }
+    w.draw(window, col);
 }
 
 void draw_unit(Unit* unit) {
@@ -142,6 +145,55 @@ void draw_unit(Unit* unit) {
     }
 }
 
+void draw_registers(Simulator* sim) {
+    const std::string register_names[] = {
+        "$zero",
+        "$at  ",
+        "$v0  ", "$v1  ",
+        "$a0  ", "$a1  ", "$a2  ", "$a3  ",
+        "$t0  ", "$t1  ", "$t2  ", "$t3  ", "$t4  ", "$t5  ", "$t6  ", "$t7  ",
+        "$s0  ", "$s1  ", "$s2  ", "$s3  ", "$s4  ", "$s5  ", "$s6  ", "$s7  ",
+        "$t8  ", "$t9  ",
+        "$k0  ", "$k1  ",
+        "$gp  ",
+        "$sp  ",
+        "$fp  ",
+        "$ra  "
+    };
+    
+    sf::Text regText;
+    regText.setFont(font);
+    regText.setCharacterSize(13);
+    regText.setColor(white);
+    auto registers = sim->register_values();
+    for(int i = 0; i < 16; ++i) {
+        regText.setPosition(registerPanel.getPosition().x + 20, registerPanel.getPosition().y + i * 15 + 4);
+        regText.setString(register_names[i] + " = "+ to_hex(registers[i]));
+        window.draw(regText);
+    }
+    
+    for(int i = 16; i < 32; ++i) {
+        regText.setPosition(registerPanel.getPosition().x + 200, registerPanel.getPosition().y + (i - 16) * 15 + 4);
+        regText.setString(register_names[i] + " = "+ to_hex(registers[i]));
+        window.draw(regText);
+    }
+}
+
+void draw_memory(Simulator* sim) {
+    u32 start_addr = cur_address;
+    
+    sf::Text memText;
+    memText.setFont(font);
+    memText.setCharacterSize(13);
+    memText.setColor(white);
+    for(int i = 0; i < 18; ++i) {
+        memText.setPosition(memoryPanel.getPosition().x + 20, memoryPanel.getPosition().y + i * 12 + 4);
+        u32 address = start_addr + i * 4;
+        memText.setString(to_hex(address) + ": " + to_hex(sim->lw(address)));
+        window.draw(memText);
+    }
+}
+
 Application::Application(Simulator* sim) {
     simulator = sim;
     
@@ -150,38 +202,50 @@ Application::Application(Simulator* sim) {
     font.loadFromFile("AndaleMono.ttf");
     
     // Init the control state text
-    controlStateText.setColor(white);
+    controlStateText.setColor(black);
     controlStateText.setFont(font);
-    controlStateText.setCharacterSize(12);
-    controlStateText.setPosition(2, 13);
+    controlStateText.setCharacterSize(14);
+    controlStateText.setPosition(2, 2);
+    
+    codeText.setColor(black);
+    codeText.setFont(font);
+    codeText.setCharacterSize(14);
+    codeText.setPosition(2, 20);
     
     // Init the gui panel
-    guiPanel.setPosition(0, 0);
+    guiPanel.setPosition(0, height - gui_height);
     guiPanel.setFillColor(black);
+    
+    // Init the register panel
+    auto registerPanelSize = registerPanel.getLocalBounds();
+    registerPanel.setPosition(width - registerPanelSize.width - 20, height - gui_height - registerPanelSize.height);
+    registerPanel.setFillColor(black);
+    
+    // Init the memory panel
+    auto memoryPanelSize = memoryPanel.getLocalBounds();
+    memoryPanel.setPosition(width - memoryPanelSize.width - 410, height - gui_height - memoryPanelSize.height);
+    memoryPanel.setFillColor(black);
     
     // Init the next button
     nextTexture.loadFromFile("next.png");
     nextSprite.setTexture(nextTexture);
     nextSprite.setScale(0.1f, 0.1f);
     nextSprite.setColor(white);
-    auto nextSpriteSize = nextSprite.getGlobalBounds();
-    nextSprite.setPosition(180, gui_height / 2 - nextSpriteSize.height / 2);
+    nextSprite.setPosition(24, height - gui_height + 8);
     
     // Init the auto play button
     autoPlayTexture.loadFromFile("autoplay.png");
     autoPlaySprite.setTexture(autoPlayTexture);
     autoPlaySprite.setScale(0.1f, 0.1f);
     autoPlaySprite.setColor(white);
-    auto autoPlaySize = autoPlaySprite.getGlobalBounds();
-    autoPlaySprite.setPosition(220, gui_height / 2 - autoPlaySize.height / 2);
+    autoPlaySprite.setPosition(60, height - gui_height + 8);
     
     // Init the pause button
     pauseTexture.loadFromFile("pause.png");
     pauseSprite.setTexture(pauseTexture);
     pauseSprite.setScale(0.1f, 0.1f);
     pauseSprite.setColor(white);
-    auto pauseSize = pauseSprite.getGlobalBounds();
-    pauseSprite.setPosition(280, gui_height / 2 - pauseSize.height / 2);
+    pauseSprite.setPosition(120, height - gui_height + 8);
     
     window.create(sf::VideoMode(width, height), "MIPS my ride");
     window.setFramerateLimit(60);
@@ -202,24 +266,28 @@ Application::Application(Simulator* sim) {
         if(sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
             auto mp = sf::Mouse::getPosition(window);
             
-            auto nextBox = nextSprite.getGlobalBounds();
-            if(nextBox.contains(mp.x, mp.y)) {
-                autoplay = false;
-                paused = false;
-                simulator->cycle();
-            }
-            
-            auto autoPlayBox = autoPlaySprite.getGlobalBounds();
-            if(autoPlayBox.contains(mp.x, mp.y)) {
-                autoplay = true;
-                paused = false;
-                prev_cycle_time = clk.getElapsedTime();
-            }
-            
-            auto pauseBox = pauseSprite.getGlobalBounds();
-            if(pauseBox.contains(mp.x, mp.y)) {
-                paused = true;
-                autoplay = false;
+            if(!mouse_held) {
+                auto nextBox = nextSprite.getGlobalBounds();
+                if(nextBox.contains(mp.x, mp.y)) {
+                    autoplay = false;
+                    paused = false;
+                    if(pulse_interp < 0) {
+                        pulse_interp = 0;
+                    }
+                }
+                
+                auto autoPlayBox = autoPlaySprite.getGlobalBounds();
+                if(autoPlayBox.contains(mp.x, mp.y)) {
+                    autoplay = true;
+                    paused = false;
+                    prev_cycle_time = clk.getElapsedTime();
+                }
+                
+                auto pauseBox = pauseSprite.getGlobalBounds();
+                if(pauseBox.contains(mp.x, mp.y)) {
+                    paused = true;
+                    autoplay = false;
+                }
             }
             
             if(drag == nullptr) {
@@ -237,9 +305,32 @@ Application::Application(Simulator* sim) {
                 mp.y -= mp.x % 2;
                 drag->set_pos(mp.x, mp.y);
             }
+            mouse_held = true;
         } else {
             drag = nullptr;
             mouse_held = false;
+        }
+        
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
+            cur_address -= 4;
+        }
+        
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
+            cur_address += 4;
+        }
+        
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
+            pulse_speed += 0.001f;
+            if(pulse_speed > 1) {
+                pulse_speed = 1;
+            }
+        }
+        
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
+            pulse_speed -= 0.001f;
+            if(pulse_speed < 0) {
+                pulse_speed = 0;
+            }
         }
         
         // Saving
@@ -267,8 +358,14 @@ Application::Application(Simulator* sim) {
         
         controlStateText.setString(control.name);
         window.draw(guiPanel);
+        window.draw(registerPanel);
+        window.draw(memoryPanel);
         window.draw(nextSprite);
         window.draw(controlStateText);
+        codeText.setString(sim->get_code());
+        window.draw(codeText);
+        draw_registers(sim);
+        draw_memory(sim);
         
         autoPlaySprite.setColor(autoplay ? sf::Color(180, 180, 180) : white);
         window.draw(autoPlaySprite);
@@ -279,10 +376,21 @@ Application::Application(Simulator* sim) {
         window.display();
         
         auto cur_time = clk.getElapsedTime();
-        if(autoplay && (cur_time - prev_cycle_time).asMilliseconds() > cycle_delay) {
+        if(!paused && pulse_interp >= 0) {
+            if(pulse_speed > 0.3f) {
+                pulse_interp = 1;
+            }
+            pulse_interp += pulse_speed;
             prev_cycle_time = cur_time;
-
+        }
+        
+        if(pulse_interp > 1) {
             simulator->cycle();
+            pulse_interp = -1;
+        }
+        
+        if(autoplay && (cur_time - prev_cycle_time).asMilliseconds() > cycle_delay) {
+            pulse_interp = 0;
         }
     }
 }

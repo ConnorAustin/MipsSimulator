@@ -11,6 +11,9 @@
 #include "shifter.hpp"
 #include "regfile.hpp"
 #include "jmp.hpp"
+#include "signextend.hpp"
+#include <iostream>
+#include <bitset>
 
 const std::string save_filename = "save.txt";
 
@@ -44,7 +47,16 @@ Peeler shamt(6, 10);
 Constant four(4);
 Constant thirtyOne(31);
 
-Simulator::Simulator(std::vector<u32> instructions, u32 base_address) {
+SignExtend signExtend;
+
+std::vector<std::string> code;
+
+Simulator::Simulator(AsmResult asmResult, u32 base_address) {
+    for(int i = 0; i < asmResult.instructions.size(); ++i) {
+        std::cout << std::bitset<32>(asmResult.instructions[i]) << " " << asmResult.code[i] << std::endl;
+    }
+    code = asmResult.code;
+    
     set_fetch_state();
     
     // Add all the units
@@ -73,6 +85,7 @@ Simulator::Simulator(std::vector<u32> instructions, u32 base_address) {
     circuit.push_back(&bReg);
     circuit.push_back(&thirtyOne);
     circuit.push_back(&shamt);
+    circuit.push_back(&signExtend);
     
     // Connect the units
     pc.connect(0, memMux.get_input(0));
@@ -92,8 +105,9 @@ Simulator::Simulator(std::vector<u32> instructions, u32 base_address) {
     instrReg.connect(0, imm.get_input(0));
     instrReg.connect(0, jmpImm.get_input(0));
     aluOut.connect(0, memory.get_input(1));
-    imm.connect(0, immShift.get_input(0));
-    imm.connect(0, aluMux2.get_input(2));
+    signExtend.connect(0, immShift.get_input(0));
+    signExtend.connect(0, aluMux2.get_input(2));
+    imm.connect(0, signExtend.get_input(0));
     immShift.connect(0, aluMux2.get_input(3));
     pc.connect(0, jmp.get_input(0));
     jmpImm.connect(0, jmp.get_input(1));
@@ -120,7 +134,7 @@ Simulator::Simulator(std::vector<u32> instructions, u32 base_address) {
     aReg.connect(0, pcInMux.get_input(3));
     
     // Load the memory with the instructions
-    memory.load_instructions(instructions, base_address);
+    memory.load_instructions(asmResult.instructions, base_address);
     
     // Set the PC to the address where the instructions are
     pc.cur_val = base_address;
@@ -128,6 +142,30 @@ Simulator::Simulator(std::vector<u32> instructions, u32 base_address) {
     
     // Try to load the circuit's positions
     load();
+}
+
+std::string Simulator::get_code() {
+    if(pc.cur_val == 0) {
+        return "???";
+    }
+    
+    u32 addr = pc.cur_val - 4;
+    if(addr % 4 != 0) {
+        return "???";
+    }
+    addr /= 4;
+    if(addr >= code.size()) {
+        return "???";
+    }
+    return code[addr];
+}
+
+u32* Simulator::register_values() {
+    return regfile.registers;
+}
+
+u32 Simulator::lw(u32 address) {
+    return memory.lw(address);
 }
 
 void Simulator::cycle() {
@@ -149,6 +187,11 @@ void Simulator::cycle() {
     // Prevent the instruction register's update if the control disallows it
     if(!control.IRWrite) {
         instrReg.next_val = instrReg.cur_val;
+    }
+    
+    // Tell the unit's that a cycle is ending
+    for(Unit* unit : circuit) {
+        unit->cycle_end();
     }
     
     u32 instruction = instrReg.cur_val;

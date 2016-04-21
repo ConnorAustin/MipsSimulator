@@ -11,11 +11,14 @@ enum class ALUOP {
     Nor,
     Slt,
     Sll,
-    Srl
+    Srl,
+    Bne,
 };
 
 struct Control {
+    // Metadata
     std::string name;
+    u32 state;
     
     u32 PCWriteCond;
     u32 PCWrite; // This is after the OR in the diagram

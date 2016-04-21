@@ -382,8 +382,8 @@ u32 assemble_instruction(const Strings& words, const Labels& labels, long addr) 
 // Assembles the given lines of code and outputs the result into output
 //      Throws AsmException
 //      Throws std::ios_base::failure
-std::vector<u32> assemble(std::istream* in, long base_address) {
-    std::vector<u32> result;
+AsmResult assemble(std::istream* in, long base_address) {
+    AsmResult result;
     
     assert_valid_address(base_address);
     
@@ -403,7 +403,8 @@ std::vector<u32> assemble(std::istream* in, long base_address) {
         
         try {
             u32 assembled_instruction = assemble_instruction(words, labels, addr);
-            result.push_back(assembled_instruction);
+            result.instructions.push_back(assembled_instruction);
+            result.code.push_back(lines[i]);
         }
         catch(AsmException e) {
             // Tag on the line number to the exception

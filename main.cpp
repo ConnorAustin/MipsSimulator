@@ -26,9 +26,9 @@ void print_help() {
 int main(int argc, char* argv[]) {    
     try {
         Config config = config_from_args(argc, argv);
-        auto instructions = assemble(config.in, config.base_address);
+        auto asmResult = assemble(config.in, config.base_address);
         
-        Simulator sim(instructions, config.base_address);
+        Simulator sim(asmResult, config.base_address);
         Application app(&sim);
     }
     

@@ -26,6 +26,9 @@ std::pair<std::string, std::string> bisect(const std::string& str, const char de
 // Returns a vector of the string's parts split by the delimter character
 std::vector<std::string> split(const std::string& str, const char delim);
 
+// Returns a string of val in hex
+std::string to_hex(u32 val);
+
 // Returns whether or not a string contains a given character or not
 bool contains (const std::string& str, char c);
 

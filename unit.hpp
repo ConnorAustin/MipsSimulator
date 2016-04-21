@@ -39,8 +39,9 @@ public:
     void set_pos(int x, int y);
     void reset_inputs();
     
-    virtual void inputs_ready() {}
+    virtual void inputs_ready() { }
     virtual void cycle() { }
+    virtual void cycle_end() { }
     virtual void draw(sf::RenderWindow& window, sf::Font& font) { }
     virtual void on_input(int in, u32 val) { }
 };

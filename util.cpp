@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <regex>
+#include <iomanip>
+#include <sstream>
 
 #include "util.hpp"
 
@@ -23,6 +25,12 @@ std::pair<std::string, std::string> bisect(const std::string& str, const char de
         return std::make_pair(str, "");
     }
     return std::make_pair(str.substr(begin, end), str.substr(end + 1, std::string::npos));
+}
+
+std::string to_hex(u32 val) {
+    std::stringstream s;
+    s << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << val;
+    return "0x" + s.str();
 }
 
 // Returns a vector of the string's parts split by the delimter character

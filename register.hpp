@@ -1,5 +1,3 @@
-#include <sstream>
-#include <iomanip>
 #include <map>
 
 #include "util.hpp"
@@ -22,11 +20,8 @@ public:
     void draw(sf::RenderWindow& window, sf::Font& font) override {
         reg_text.setFont(font);
         reg_text.setColor(sf::Color(20, 20, 20));
-        reg_text.setString(std::to_string(cur_val));
         
-        std::stringstream s;
-        s << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << cur_val;
-        reg_text.setString("0x" + s.str());
+        reg_text.setString(to_hex(cur_val));
 
         auto size = reg_text.getLocalBounds();
         reg_text.setPosition(x + w / 2.0f - size.width / 2.0f, y + h / 2.0f - size.height);
@@ -38,7 +33,10 @@ public:
     }
     
     void cycle() override { 
-        cur_val = next_val;
         write(0, cur_val);
+    }
+    
+    void cycle_end() override {
+        cur_val = next_val;
     }
 };

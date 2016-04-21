@@ -25,11 +25,15 @@ u32 op_slt(u32 a, u32 b) {
 }
 
 u32 op_sll(u32 a, u32 b) {
-    return a << b;
+    return b << a;
 }
 
 u32 op_srl(u32 a, u32 b) {
-    return a >> b;
+    return b >> a;
+}
+
+u32 op_bne(u32 a, u32 b) {
+    return a != b ? 0 : 1;
 }
 
 std::function<u32(u32, u32)> operations[] = {
@@ -40,7 +44,8 @@ std::function<u32(u32, u32)> operations[] = {
     op_nor,
     op_slt,
     op_sll,
-    op_srl
+    op_srl,
+    op_bne
 };
 
 u32 ALU::perform_operation() {

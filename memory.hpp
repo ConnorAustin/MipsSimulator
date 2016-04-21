@@ -18,15 +18,18 @@ public:
     
     std::map<u32, u32> addr_to_mem;
     
+    u32 lw(u32 address) {
+        auto it = addr_to_mem.find(address);
+        if(it == addr_to_mem.end()) {
+            return 0;
+        } else {
+            return it->second;
+        }
+    }
+    
     void on_input(int in, u32 val) override { 
         if(in == 0 && control.MemRead) {
-            auto it = addr_to_mem.find(address);
-            
-            if(it == addr_to_mem.end()) {
-                write(0, 0);
-            } else {
-                write(0, it->second);
-            }
+            write(0, lw(val));
         }
     }
     

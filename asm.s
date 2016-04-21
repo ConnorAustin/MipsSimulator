@@ -1,24 +1,45 @@
-START: add $s0, $s1, $s2
-sub $s3, $s4, $s5
-and $s6, $s7, $t0
-or $t1, $t2, $t3
-nor $t4, $t5, $t6 # START:
-slt $t0, $t8, $t9
-sll $s0, $s6, 31
+addi $gp, $zero, 0x400
 
-LABEL:
+addi $t0, $zero, 5
+sw $t0, 0($gp)
 
+addi $t0, $zero, 3
+sw $t0, 4($gp)
 
-srl $s0, $s6, 5
-jr $s3
+addi $t0, $zero, 2
+sw $t0, 8($gp)
 
-LOOP:   addi $s6, $s3, -1
-andi $s6, $s3, 25535
-ori $s6, $s3, 32
-beq $s3, $s6, LOOP
-bne $s3, $s6, EXIT 
-lw $s6, 4($s3)
-sw $s6, -4($s3) 
+addi $t0, $zero, 1
+sw $t0, 12($gp)
 
-EXIT: j START
-jal EXIT
+addi $t0, $zero, 6
+sw $t0, 16($gp)
+
+sort:
+addi $t9, $zero, 5     # constant
+addi $t8, $zero, 4     # constant
+
+addi $t0, $zero, 0
+outer:
+addi $t1, $zero, 0
+inner:
+sll $s1, $t1, 2
+add $s1, $s1, $gp
+
+lw $s2, 0($s1)
+lw $s3, 4($s1)
+
+slt $s4, $s3, $s2
+beq $s4, $zero, skip
+
+sw $s2, 4($s1)
+sw $s3, 0($s1)
+
+skip:
+addi $t1, $t1, 1
+bne $t1, $t8, inner
+addi $t0, $t0, 1
+bne $t0, $t9, outer
+
+hang:
+j hang

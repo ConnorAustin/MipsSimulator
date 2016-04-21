@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vector>
+#include "assembler.hpp"
 #include "control.hpp"
 #include "unit.hpp"
 #include "util.hpp"
@@ -14,12 +15,16 @@ private:
 public:
     std::vector<Unit*> circuit;
     
-    Simulator(std::vector<u32> instructions, u32 base_address);
+    Simulator(AsmResult asmResult, u32 base_address);
     
     void cycle();
     
     void load();
     void save();
+    
+    u32* register_values();
+    u32 lw(u32 address);
+    std::string get_code();
 };
 
 #endif
