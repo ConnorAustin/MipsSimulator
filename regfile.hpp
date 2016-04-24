@@ -25,6 +25,12 @@ public:
     }
     
     void on_input(int in, u32 val) override { 
+        // Ensure that the write register is less than 31
+        if(write_reg > 31) {
+            // If it is, something terrible happened. Set the write register to zero
+            write_reg = 0;
+        }
+        
         // If the control doesn't want us to write to the register ...
         if(!control.RegWrite) {
             // ... Just set the write data to what it already is!
@@ -38,11 +44,11 @@ public:
     }
     
     void inputs_ready() override { 
-        if(reg1 < 32) {
+        if(reg1 <= 31) {
             write(0, registers[reg1]);
         } else write(0, 0);
         
-        if(reg2 < 32) {
+        if(reg2 <= 31) {
             write(1, registers[reg2]);
         } else write(1, 0);
     }

@@ -11,7 +11,8 @@
 class Simulator {
 private: 
     Unit* add(Unit u);
-    
+    u32 base_address;
+
 public:
     std::vector<Unit*> circuit;
     

@@ -10,25 +10,6 @@ std::map<u32, ALUOP> funct_to_aluop =
 {0x25,  ALUOP::Or},  {0x27,  ALUOP::Nor}, {0x2A,  ALUOP::Slt},
 {0x00,  ALUOP::Sll}, {0x02,  ALUOP::Srl}};
 
-enum State {
-    Fetch = 0,
-    Decode,
-    Jump,
-    JumpRegister,
-    Exec_R,
-    Branch,
-    Exec_LWSW,
-    Writeback_R,
-    Shift,
-    SLT,
-    Exec_I,
-    Writeback_I,
-    LW_Read,
-    SW,
-    Writeback_LW,
-    JAL
-};
-
 void set_fetch_state() {
     control.name = "Fetch";
     control.state = Fetch;
@@ -84,7 +65,12 @@ void set_exec_r_state(u32 funct) {
     control.RegDataLoc = 0; // DC
     control.IRWrite = false;
     
-    control.ALUOp = funct_to_aluop[funct];
+    auto it = funct_to_aluop.find(funct);
+    if(it == funct_to_aluop.end()) {
+        control.ALUOp = ALUOP::Unknown;
+    } else {
+        control.ALUOp = it->second;
+    }
 }
 
 void set_exec_i_state(ALUOP operation) {
@@ -178,7 +164,7 @@ void set_branch_state(bool is_beq) {
     control.IorD = 0;
     control.MemRead = false;
     control.MemWrite = false;
-    control.RegDataLoc = 0; 
+    control.RegDataLoc = 0;
     control.IRWrite = false;
     control.ALUOp = is_beq ? ALUOP::Sub : ALUOP::Bne;
 }

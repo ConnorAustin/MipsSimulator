@@ -29,8 +29,8 @@ public:
         text.setCharacterSize(12);
         for(int i = 0; i < inputs.size(); ++i) {
             text.setString(std::to_string(i));
-            auto text_height = text.getLocalBounds().height;
-            text.setPosition(x + 5, inputs[i].y - text_height);
+            auto text_size = text.getGlobalBounds();
+            text.setPosition((int)(x + w / 2 - text_size.width / 2), (int)(inputs[i].y - text_size.height));
             window.draw(text);
         }
     }

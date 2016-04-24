@@ -27,7 +27,7 @@ public:
         text.setFont(font);
         text.setCharacterSize(12);
         text.setString("[" + std::to_string(b) + "-" + std::to_string(a) + "]");
-        auto text_size = text.getLocalBounds();
+        auto text_size = text.getGlobalBounds();
         text.setPosition((int)(x + (w - text_size.width) / 2), y);
         window.draw(text);
     }

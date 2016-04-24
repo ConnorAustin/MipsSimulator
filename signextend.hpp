@@ -4,7 +4,7 @@
 class SignExtend : public Unit {
 public:
     SignExtend() {        
-        init("Sign Extend", 60, 20);
+        init("Sign Extend", 70, 20);
         add_input();
         add_output();
     }

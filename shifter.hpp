@@ -19,7 +19,7 @@ public:
         text.setFont(font);
         text.setCharacterSize(12);
         text.setString("Shift " + std::to_string(shamt));
-        auto text_size = text.getLocalBounds();
+        auto text_size = text.getGlobalBounds();
         text.setPosition((int)(x + (w - text_size.width) / 2), y);
         window.draw(text);
     }

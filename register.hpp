@@ -23,7 +23,7 @@ public:
         
         reg_text.setString(to_hex(cur_val));
 
-        auto size = reg_text.getLocalBounds();
+        auto size = reg_text.getGlobalBounds();
         reg_text.setPosition(x + w / 2.0f - size.width / 2.0f, y + h / 2.0f - size.height);
         window.draw(reg_text);
     }

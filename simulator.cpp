@@ -52,6 +52,7 @@ SignExtend signExtend;
 std::vector<std::string> code;
 
 Simulator::Simulator(AsmResult asmResult, u32 base_address) {
+    this->base_address = base_address;
     for(int i = 0; i < asmResult.instructions.size(); ++i) {
         std::cout << std::bitset<32>(asmResult.instructions[i]) << " " << asmResult.code[i] << std::endl;
     }
@@ -145,14 +146,16 @@ Simulator::Simulator(AsmResult asmResult, u32 base_address) {
 }
 
 std::string Simulator::get_code() {
-    if(pc.cur_val == 0) {
+    if(control.state == Fetch) {
         return "???";
     }
     
-    u32 addr = pc.cur_val - 4;
+    u32 addr = pc.cur_val - 4 - base_address;
+    
     if(addr % 4 != 0) {
         return "???";
     }
+    
     addr /= 4;
     if(addr >= code.size()) {
         return "???";

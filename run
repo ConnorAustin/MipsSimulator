@@ -1,2 +1,2 @@
 #!/bin/bash
-clang++ -g -O1 -std=c++11 *.cpp -lsfml-graphics -lsfml-window -lsfml-system && echo "running" && ./a.out asm.s -a 0
+clang++ -g -O1 -std=c++11 *.cpp -lsfml-graphics -lsfml-window -lsfml-system && echo "running" && ./a.out asm.s -a 0x00400000

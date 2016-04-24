@@ -13,6 +13,26 @@ enum class ALUOP {
     Sll,
     Srl,
     Bne,
+    Unknown
+};
+
+enum State {
+    Fetch = 0,
+    Decode,
+    Jump,
+    JumpRegister,
+    Exec_R,
+    Branch,
+    Exec_LWSW,
+    Writeback_R,
+    Shift,
+    SLT,
+    Exec_I,
+    Writeback_I,
+    LW_Read,
+    SW,
+    Writeback_LW,
+    JAL
 };
 
 struct Control {
