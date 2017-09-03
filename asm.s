@@ -1,3 +1,4 @@
+# This section stores the values of an array into memory
 addi $gp, $zero, 0x400
 
 addi $t0, $zero, 5
@@ -15,6 +16,7 @@ sw $t0, 12($gp)
 addi $t0, $zero, 6
 sw $t0, 16($gp)
 
+# This section sorts
 sort:
 addi $t9, $zero, 5     # constant
 addi $t8, $zero, 4     # constant
