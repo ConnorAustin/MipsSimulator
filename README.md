@@ -18,7 +18,7 @@ This is the diagram for the actual MIPS architecture I used for reference:
 Requires SFML 2.4 lib along with SFML's dependencies to be installed.
 
 
-Run `$ make` to build the project and then run `./simulator asm.s` to see it run a simple asm file that sorts a couple numbers.
+Run `$ make` to build the project and then run `$ ./simulator asm.s` to see it run a simple asm file that sorts a couple numbers.
 
 
 The up and down arrow keys moves the the window into memory.
